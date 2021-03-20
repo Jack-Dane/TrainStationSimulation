@@ -13,26 +13,44 @@ namespace TrainStationSimulator
         public void Start()
         {
             using var db = new TrainStationContext();
+            PrintAllData();
 
-            Route firstRoute = db.Routes.Where(route => route.RouteId == 1).First();
-            RouteStation currentRouteStation = firstRoute.RouteStations.OrderBy(routeStation => routeStation.Sequence).First();
+            // get the current station and destination from the user
+            Console.WriteLine("What station are you at? ");
+            string currentStationInput = Console.ReadLine();
+            Console.WriteLine("What station would you like to go to? ");
+            string destinationStationInput = Console.ReadLine();
 
-            // simulate going through the route
-            int count = 0;
-            while (count < 10)
+            // search for the stations
+            Station currentStation = db.Stations.Where(station => station.StationName == currentStationInput).First();
+            Station destinationStation = db.Stations.Where(station => station.StationName == destinationStationInput).First();
+
+            // assuming there is only one route
+            Route currentRoute = db.Routes.Where(route => route.RouteId == 1).First();
+            List<RouteStation> stationsOnRoute = db.RouteStations.Where(routeStation => routeStation.Route == currentRoute).ToList();
+            RouteStation currentRouteStation = stationsOnRoute.Where(routeStation => routeStation.CurrentStation == currentStation).First();
+
+            // simulate going through a route from current to destination
+            bool found = false;
+            while (!found)
             {
-                RouteStation nextRouteStation = currentRouteStation.NextRouteStation;
-                Console.WriteLine(nextRouteStation.RouteStationId);
+                Console.WriteLine("Station: ");
+                Console.WriteLine(currentRouteStation.CurrentStation.StationName);
 
-                currentRouteStation = nextRouteStation;
-                count++;
+                if (currentRouteStation.CurrentStation == destinationStation)
+                {
+                    found = true;
+                }
+                else
+                {
+                    currentRouteStation = currentRouteStation.NextRouteStation;
+                }
             }
 
-            PrintAllData();
             Console.ReadKey();
         }
 
-        public void PrintAllData()
+        private void PrintAllData()
         {
             using var db = new TrainStationContext();
 
